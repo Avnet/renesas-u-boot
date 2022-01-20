@@ -801,6 +801,8 @@ dtb-$(CONFIG_RCAR_GEN3) += \
 	rzg2lc-dev.dtb \
 	smarc-rzg2lc.dtb
 
+dtb-$(CONFIG_RCAR_GEN3) += rzboard.dtb
+
 ifdef CONFIG_RCAR_GEN3
 DTC_FLAGS += -R 4 -p 0x1000
 endif
