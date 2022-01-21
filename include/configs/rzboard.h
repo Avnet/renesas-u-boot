@@ -60,15 +60,20 @@
 /* ENV setting */
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
+	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
+	"image=Image \0" \
+	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
+	"mmcpart=" __stringify(CONFIG_SYS_MMC_ENV_PART) "\0" \
+	"fdt_loadaddr=0x48000000 \0" \
+	"image_loadaddr=0x48080000 \0" \
 	"bootm_size=0x10000000 \0" \
-	"prodsdbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p1 \0" \
-	"prodemmcbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p1 \0" \
-	"bootimage=unzip 0x4A080000 0x48080000; booti 0x48080000 - 0x48000000 \0" \
-	"emmcload=ext4load mmc 0:1 0x4A080000 boot/Image.gz;ext4load mmc 0:1 0x48000000 boot/rzboard.dtb;run prodemmcbootargs \0" \
-	"sd1load=ext4load mmc 0:1 0x4A080000 boot/Image.gz;ext4load mmc 0:1 0x48000000 boot/rzboard.dtb;run prodsdbootargs \0" \
-	"bootcmd_check=if mmc dev 0; then run sd1load; else run emmcload; fi \0"
+	"mmcbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p2 \0" \
+	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${image_loadaddr} ${image}\0" \
+	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_loadaddr} ${fdtfile}\0" \
+	"mmcload=mmc dev ${mmcdev};run loadfdt;run loadimage;run mmcbootargs \0" \
+	"bootimage=run mmcload; booti 0x48080000 - 0x48000000 \0"
 
-#define CONFIG_BOOTCOMMAND	"env default -a;run bootcmd_check;run bootimage"
+#define CONFIG_BOOTCOMMAND	"env default -a;run bootimage"
 
 /* For board */
 /* Ethernet RAVB */
