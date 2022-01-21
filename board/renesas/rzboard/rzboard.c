@@ -43,7 +43,6 @@ void s_init(void)
 {
 	/* can go in board_eht_init() once enabled */
 	*(volatile u32 *)(ETH_CH0) = (*(volatile u32 *)(ETH_CH0) & 0xFFFFFFFC) | ETH_PVDD_1800;
-	*(volatile u32 *)(ETH_CH1) = (*(volatile u32 *)(ETH_CH1) & 0xFFFFFFFC) | ETH_PVDD_1800;
 	/* Enable RGMII for both ETH{0,1} */
 	*(volatile u32 *)(ETH_MII_RGMII) = (*(volatile u32 *)(ETH_MII_RGMII) & 0xFFFFFFFC);
 	/* ETH CLK */
@@ -83,6 +82,18 @@ int board_mmc_init(struct bd_info *bis)
 	return ret;
 }
 
+#define PFC_P14				(PFC_BASE + 0x014)
+#define PFC_PM14				(PFC_BASE + 0x128)
+#define PFC_PMC14				(PFC_BASE + 0x214)
+int board_eth_init(struct bd_info *bis)
+{
+	/* Ethernet PHY Reset: P4_1 = 1; */
+	*(volatile u32 *)(PFC_PMC37) &= 0xFFFFFFFD;
+	*(volatile u32 *)(PFC_PM37) = (*(volatile u32 *)(PFC_PM37) & 0xFFFFFFF3) | 0x08;
+	*(volatile u32 *)(PFC_P37) = (*(volatile u32 *)(PFC_P37) & 0xFFFFFFFD) | 0x2;
+
+    return 0;
+}
 
 int board_init(void)
 {
