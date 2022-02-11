@@ -81,7 +81,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&eth0_pins>;
 	phy-handle = <&phy0>;
-	phy-mode = "rgmii";
+	phy-mode = "rgmii-id";
 	status = "okay";
 
 	phy0: ethernet-phy@4 {
