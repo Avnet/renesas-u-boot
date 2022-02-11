@@ -53,8 +53,37 @@ void s_init(void)
 		;
 }
 
+#define PFC_P18				(PFC_BASE + 0x018)
+#define PFC_PM18				(PFC_BASE + 0x130)
+#define PFC_PMC18				(PFC_BASE + 0x218)
+#define PFC_P21				(PFC_BASE + 0x142)
+#define PFC_PM21				(PFC_BASE + 0x128)
+#define PFC_PMC21				(PFC_BASE + 0x221)
+#define PFC_P23				(PFC_BASE + 0x023)
+#define PFC_PM23				(PFC_BASE + 0x146)
+#define PFC_PMC23				(PFC_BASE + 0x223)
+int board_led_init(void)
+{
+	/* RED LED: P8_1 = 0; */
+	*(volatile u32 *)(PFC_PMC18) &= 0xFFFFFFFD;
+	*(volatile u32 *)(PFC_PM18) = (*(volatile u32 *)(PFC_PM18) & 0xFFFFFFF3) | 0x08;
+	*(volatile u32 *)(PFC_P18) = (*(volatile u32 *)(PFC_P18) & 0xFFFFFFFD) | 0x0;
+	/* GREEN LED: P17_2 = 1; */
+	*(volatile u32 *)(PFC_PMC21) &= 0xFFFFFFFB;
+	*(volatile u32 *)(PFC_PM21) = (*(volatile u32 *)(PFC_PM21) & 0xFFFFFFCF) | 0x20;
+	*(volatile u32 *)(PFC_P21) = (*(volatile u32 *)(PFC_P21) & 0xFFFFFFFB) | 0x4;
+	/* BLUE LED: P19_1 = 0; */
+	*(volatile u32 *)(PFC_PMC23) &= 0xFFFFFFFD;
+	*(volatile u32 *)(PFC_PM23) = (*(volatile u32 *)(PFC_PM23) & 0xFFFFFFF3) | 0x08;
+	*(volatile u32 *)(PFC_P23) = (*(volatile u32 *)(PFC_P23) & 0xFFFFFFFD) | 0x0;
+
+    return 0;
+}
+
 int board_early_init_f(void)
 {
+	/* LED's */
+	board_led_init();
 
 	return 0;
 }
