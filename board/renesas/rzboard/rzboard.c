@@ -88,9 +88,9 @@ int board_mmc_init(struct bd_info *bis)
 int board_eth_init(struct bd_info *bis)
 {
 	/* Ethernet PHY Reset: P4_1 = 1; */
-	*(volatile u32 *)(PFC_PMC37) &= 0xFFFFFFFD;
-	*(volatile u32 *)(PFC_PM37) = (*(volatile u32 *)(PFC_PM37) & 0xFFFFFFF3) | 0x08;
-	*(volatile u32 *)(PFC_P37) = (*(volatile u32 *)(PFC_P37) & 0xFFFFFFFD) | 0x2;
+	*(volatile u32 *)(PFC_PMC14) &= 0xFFFFFFFD;
+	*(volatile u32 *)(PFC_PM14) = (*(volatile u32 *)(PFC_PM14) & 0xFFFFFFF3) | 0x08;
+	*(volatile u32 *)(PFC_P14) = (*(volatile u32 *)(PFC_P14) & 0xFFFFFFFD) | 0x2;
 
     return 0;
 }
