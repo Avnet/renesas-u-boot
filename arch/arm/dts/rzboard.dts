@@ -13,8 +13,7 @@
 #include <dt-bindings/pinctrl/rzv2l-pinctrl.h>
 
 / {
-	model = "smarc-rzv2l";
-	/*model = "Avnet,RzBoard";*/
+	model = "Avnet RzBoard";
 	compatible = "avnet,rzboard", "renesas,r9a07g054l", "renesas,rzv2l";
 
 	aliases {
