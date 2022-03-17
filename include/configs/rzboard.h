@@ -63,10 +63,11 @@
 #endif
 
 #define DEFAULT_MMC_UENV_ARGS \
+	MMC_FDT_OVERLAY_SETTING \
 	"bootenvfile=uEnv.txt\0" \
 	"importbootenv=echo Importing environment from mmc${mmcdev} ...; " \
-		"env import -t ${image_loadaddr} ${filesize}\0" \
-	"loadbootenv=fatload mmc ${mmcdev} ${image_loadaddr} ${bootenvfile}\0" \
+		"env import -t ${image_addr} ${filesize}\0" \
+	"loadbootenv=fatload mmc ${mmcdev} ${image_addr} ${bootenvfile}\0" \
 	"envboot=mmc dev ${mmcdev}; " \
 		"if mmc rescan; then " \
 			"echo SD/MMC found on device ${mmcdev};" \
@@ -88,18 +89,30 @@
 	"image=Image \0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_ENV_PART) "\0" \
-	"fdt_loadaddr=0x48000000 \0" \
-	"image_loadaddr=0x48080000 \0" \
+	"dtb_addr=0x48000000 \0" \
+	"image_addr=0x48080000 \0" \
 	"bootm_size=0x10000000 \0" \
 	"mmcbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p2 \0" \
-	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${image_loadaddr} ${image}\0" \
-	"loadfdt=echo loading ${fdtfile};fatload mmc ${mmcdev}:${mmcpart} ${fdt_loadaddr} ${fdtfile}\0" \
+	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${image_addr} ${image}\0" \
+	"loadfdt=echo loading ${fdtfile};fatload mmc ${mmcdev}:${mmcpart} ${dtb_addr} ${fdtfile}\0" \
 	"mmcload=mmc dev ${mmcdev};run loadfdt;run loadimage;run mmcbootargs \0" \
-	"bootimage=run mmcload; booti 0x48080000 - 0x48000000 \0"
+	"bootimage=run mmcload; booti $image_addr - $dtb_addr \0"
+
+#include "rzboard_overlay.h"
+
+#ifdef AVNET_UENV_FDTO_SUPPORT
+
+#define CONFIG_BOOTCOMMAND      \
+        MMC_BOOT_UENV           \
+        MMC_BOOT_WITH_FDT_OVERLAY \
+		"run bootimage"
+
+#else
 
 #define CONFIG_BOOTCOMMAND	\
 	MMC_BOOT_UENV \
-	"run bootimage"
+
+#endif
 
 /* For board */
 /* Ethernet RAVB */
