@@ -91,7 +91,6 @@
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_ENV_PART) "\0" \
 	"dtb_addr=0x48000000 \0" \
 	"image_addr=0x48080000 \0" \
-	"bootm_size=0x10000000 \0" \
 	"mmcbootargs=setenv bootargs rw rootwait earlycon root=/dev/mmcblk0p2 \0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${image_addr} ${image}\0" \
 	"loadfdt=echo loading ${fdtfile};fatload mmc ${mmcdev}:${mmcpart} ${dtb_addr} ${fdtfile}\0" \

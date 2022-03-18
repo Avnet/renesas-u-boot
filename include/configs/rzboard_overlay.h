@@ -32,19 +32,30 @@
             " fi; "                                   \
         "fi; "
 
+#define   FDT_ENTRY_CHECK_RUN_CAMERA(name)              \
+        "if env exists " name " ; then "              \
+            " if test ${" name "} = ov5640 ; then "     \
+			GET_OVERLAY_APPLY("rzboard-cam-ov5640.dtbo")  \
+            " elif test ${" name "} = as0260 ; then "   \
+            GET_OVERLAY_APPLY("rzboard-cam-as0260.dtbo")  \
+            " else;"                                  \
+            "       echo  no found displayer; "       \
+            " fi; "                                   \
+        "fi; "
+
+
 /* 
  * enable_overlay_xxx is set in uEnv.txt, then load the corresponding dtbo file
  */
 #define FDT_ENTRY_DEF_SETTINGS          \
 				FDT_ENTRY_CHECK_RUN_DISP("enable_overlay_disp")  \
+				FDT_ENTRY_CHECK_RUN_CAMERA("enable_overlay_camera")  \
 				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_gpio", "rzboard-ext-gpio.dtbo") \
 				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_i2c", "rzboard-ext-i2c.dtbo") \
 				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_pwm", "rzboard-ext-pwm.dtbo") \
 				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_spi", "rzboard-ext-spi.dtbo") \
-				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_sai2", "rzboard-ext-sai2.dtbo") \
+				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_can", "rzboard-ext-can.dtbo") \
 				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_uart2", "rzboard-ext-uart2.dtbo") \
-				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_camera", "rzboard-ov5640.dtbo") \
-				FDT_ENTRY_CHECK_RUN_ENV("enable_overlay_usbgadget", "rzboard-usb0-device.dtbo")
 
 
 #define MMC_RUN_FDT_OVERLAY       \
