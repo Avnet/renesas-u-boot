@@ -11,6 +11,7 @@
 #include <asm/io.h>
 #include <linux/bitops.h>
 #include <linux/errno.h>
+#include <linux/delay.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/gpio.h>
 #include <asm/arch/gpio.h>
@@ -124,10 +125,28 @@ int board_eth_init(struct bd_info *bis)
     return 0;
 }
 
+#define PFC_P10				(PFC_BASE + 0x010)
+#define PFC_PM10				(PFC_BASE + 0x120)
+#define PFC_PMC10				(PFC_BASE + 0x210)
+int usbhub_reset(void)
+{
+	/* USB Hub Reset: P0_0 = 1; */
+	*(volatile u32 *)(PFC_PMC10) &= 0xFFFFFFFE;
+	*(volatile u32 *)(PFC_PM10) = (*(volatile u32 *)(PFC_PM10) & 0xFFFFFFFC) | 0x02;
+	*(volatile u32 *)(PFC_P10) = (*(volatile u32 *)(PFC_P10) & 0xFFFFFFFE) | 0x0;
+	mdelay(2);
+	*(volatile u32 *)(PFC_P10) = (*(volatile u32 *)(PFC_P10) & 0xFFFFFFFE) | 0x1;
+
+	return 0;
+}
+
 int board_init(void)
 {
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_TEXT_BASE + 0x50000;
+
+	/* reset usbhub */
+	usbhub_reset();
 
 	return 0;
 }
