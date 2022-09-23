@@ -80,6 +80,16 @@
 #define MMC_BOOT_UENV  "run envboot;"
 #define DEFAULT_MMC_RZV2L_ARGS  DEFAULT_MMC_UENV_ARGS
 
+/* Load rzv2l_cm33_rpmsg_demo to run */
+#define CM33_BOOT_ARGS \
+	"dcache off; " \
+	"mmc dev 0; " \
+	"fatload mmc 0:1 0x0001FF80 cm33/rzv2l_cm33_rpmsg_demo_secure_vector.bin; " \
+	"fatload mmc 0:1 0x42EFF440 cm33/rzv2l_cm33_rpmsg_demo_secure_code.bin; " \
+	"fatload mmc 0:1 0x00010000 cm33/rzv2l_cm33_rpmsg_demo_non_secure_vector.bin; " \
+	"fatload mmc 0:1 0x40010000 cm33/rzv2l_cm33_rpmsg_demo_non_secure_code.bin; " \
+	"cm33 start_debug 0x1001FF80 0x00010000; " \
+	"dcache on;"
 
 /* ENV setting */
 
@@ -95,7 +105,8 @@
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${image_addr} ${image}\0" \
 	"loadfdt=echo loading ${fdtfile};fatload mmc ${mmcdev}:${mmcpart} ${dtb_addr} ${fdtfile}\0" \
 	"mmcload=mmc dev ${mmcdev};run loadfdt;run loadimage;run mmcbootargs \0" \
-	"bootimage=run mmcload; booti $image_addr - $dtb_addr \0"
+	"bootimage=run mmcload; booti $image_addr - $dtb_addr \0" \
+	"bootcm33=" CM33_BOOT_ARGS "\0"
 
 #include "rzboard_overlay.h"
 
