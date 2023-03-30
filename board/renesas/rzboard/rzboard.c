@@ -20,6 +20,8 @@
 #include <asm/arch/sh_sdhi.h>
 #include <i2c.h>
 #include <mmc.h>
+#include <wdt.h>
+#include <rzg2l_wdt.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -38,14 +40,35 @@ DECLARE_GLOBAL_DATA_PTR;
 #define CPG_CLKON_BASE				(CPG_BASE + 0x500)
 #define CPG_RESET_BASE				(CPG_BASE + 0x800)
 #define CPG_RESET_ETH				(CPG_RESET_BASE + 0x7C)
-#define CPG_RESET_I2C				(CPG_RESET_BASE + 0x80)
-#define CPG_PL2_SDHI_DSEL			(CPG_BASE + 0x218)
-#define CPG_CLK_STATUS				(CPG_BASE + 0x280)
+#define CPG_RESET_I2C                           (CPG_RESET_BASE + 0x80)
+#define CPG_RST_USB				(CPG_BASE + 0x878)
+#define CPG_CLKON_USB				(CPG_BASE + 0x578)
 
 /* PFC */
 #define PFC_P37						(PFC_BASE + 0x037)
 #define PFC_PM37					(PFC_BASE + 0x16E)
 #define PFC_PMC37					(PFC_BASE + 0x237)
+#define PFC_PWPR 					(PFC_BASE + 0x3014)
+#define PFC_PMC14					(PFC_BASE + 0x214)
+#define PFC_PFC14					(PFC_BASE + 0x450)
+#define PFC_PMC15					(PFC_BASE + 0x215)
+#define PFC_PFC15					(PFC_BASE + 0x454)
+#define PFC_PMC3A					(PFC_BASE + 0x23a)
+#define PFC_PFC3A					(PFC_BASE + 0x4e8)
+
+#define USBPHY_BASE		0x11c40000
+#define USB0_BASE		0x11c50000
+#define USB1_BASE		0x11c70000
+#define USBF_BASE		0x11c60000
+#define USBPHY_RESET		(USBPHY_BASE + 0x000u)
+#define COMMCTRL		0x800
+#define HcRhDescriptorA		0x048
+#define LPSTS			0x102
+
+#define RPC_CMNCR		0x10060000
+
+/* WDT */
+#define WDT_INDEX		0
 
 void s_init(void)
 {
@@ -64,10 +87,8 @@ void s_init(void)
 	*(volatile u32 *)(CPG_RESET_I2C) = 0xF000F;
 	/* I2C pin non GPIO enable */
 	*(volatile u32 *)(I2C_CH1) = 0x01010101;
-	/* SD CLK */
-	*(volatile u32 *)(CPG_PL2_SDHI_DSEL) = 0x00110011;
-	while (*(volatile u32 *)(CPG_CLK_STATUS) != 0)
-		;
+
+	*(volatile u32 *)(RPC_CMNCR) = 0x01FFF300;
 }
 
 #define PFC_P18				(PFC_BASE + 0x018)
@@ -105,6 +126,54 @@ int board_early_init_f(void)
 	return 0;
 }
 
+static void board_usb_init(void)
+{
+	/*Enable USB*/
+	(*(volatile u32 *)CPG_RST_USB) = 0x000f000f;
+	(*(volatile u32 *)CPG_CLKON_USB) = 0x000f000f;
+
+	/* Setup  */
+	/* Disable GPIO Write Protect */
+	(*(volatile u32 *)PFC_PWPR) &= ~(0x1u << 7);    /* PWPR.BOWI = 0 */
+	(*(volatile u32 *)PFC_PWPR) |= (0x1u << 6);     /* PWPR.PFCWE = 1 */
+
+	/* set P4_0 as Func.1 for VBUSEN */
+	(*(volatile u8 *)PFC_PMC14) |= (0x1u << 0);     /* PMC14.b0 = 1 */
+	(*(volatile u8 *)PFC_PFC14) &= ~(0x7u << 0);    /* PFC14.PFC0 = 0 */
+	(*(volatile u8 *)PFC_PFC14) |= (0x1u << 0);
+
+	/* set P5_0 as Func.1 for OVERCUR */
+	(*(volatile u8 *)PFC_PMC15) |= (0x1u << 0);     /* PMC15.b0 = 1 */
+	(*(volatile u8 *)PFC_PFC15) &= ~(0x7u << 0);    /* PFC15.PFC0 = 0 */
+	(*(volatile u8 *)PFC_PFC15) |= (0x1u << 0);
+
+	/* set P42_0 as Func.1 for VBUSEN */
+	(*(volatile u8 *)PFC_PMC3A) |= (0x1u << 0);     /* PMC14.b0 = 1 */
+	(*(volatile u8 *)PFC_PFC3A) &= ~(0xfu << 0);    /* PFC15.PFC0 = 0 */
+	(*(volatile u8 *)PFC_PFC3A) |= (0x1u << 0);
+
+	/* set P42_1 as Func.1 for OVERCUR */
+	(*(volatile u8 *)PFC_PMC3A) |= (0x1u << 0);     /* PMC14.b1 = 1 */
+	(*(volatile u8 *)PFC_PFC3A) &= ~(0xfu << 4);    /* PFC15.PFC1 = 0 */
+	(*(volatile u8 *)PFC_PFC3A) |= (0x1u << 4);
+
+	/* Enable write protect */
+	(*(volatile u32 *)PFC_PWPR) &= ~(0x1u << 6);    /* PWPR.PFCWE = 0 */
+	(*(volatile u32 *)PFC_PWPR) |= (0x1u << 7);     /* PWPR.BOWI = 1 */
+
+	/*Enable 2 USB ports*/
+	(*(volatile u32 *)USBPHY_RESET) = 0x00001000u;
+	/*USB0 is HOST*/
+	(*(volatile u32 *)(USB0_BASE + COMMCTRL)) = 0;
+	/*USB1 is HOST*/
+	(*(volatile u32 *)(USB1_BASE + COMMCTRL)) = 0;
+	/* Set USBPHY normal operation (Function only) */
+	(*(volatile u16 *)(USBF_BASE + LPSTS)) |= (0x1u << 14);		/* USBPHY.SUSPM = 1 (func only) */
+	/* Overcurrent is not supported */
+	(*(volatile u32 *)(USB0_BASE + HcRhDescriptorA)) |= (0x1u << 12);       /* NOCP = 1 */
+	(*(volatile u32 *)(USB1_BASE + HcRhDescriptorA)) |= (0x1u << 12);       /* NOCP = 1 */
+}
+
 #define PFC_P14				(PFC_BASE + 0x014)
 #define PFC_PM14				(PFC_BASE + 0x128)
 #define PFC_PMC14				(PFC_BASE + 0x214)
@@ -138,6 +207,7 @@ int board_init(void)
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_TEXT_BASE + 0x50000;
 
+	//board_usb_init();
 	/* reset usbhub */
 	usbhub_reset();
 
@@ -146,5 +216,23 @@ int board_init(void)
 
 void reset_cpu(void)
 {
+#ifdef CONFIG_RENESAS_RZG2LWDT
+	struct udevice *wdt_dev;
+	if (uclass_get_device(UCLASS_WDT, WDT_INDEX, &wdt_dev) < 0) {
+		printf("failed to get wdt device. cannot reset\n");
+		return;
+	}
+	if (wdt_expire_now(wdt_dev, 0) < 0) {
+		printf("failed to expire_now wdt\n");
+	}
+#endif // CONFIG_RENESAS_RZG2LWDT
+}
 
+int board_late_init(void)
+{
+#ifdef CONFIG_RENESAS_RZG2LWDT
+	rzg2l_reinitr_wdt();
+#endif // CONFIG_RENESAS_RZG2LWDT
+
+	return 0;
 }
