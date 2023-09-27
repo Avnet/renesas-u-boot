@@ -34,8 +34,8 @@
         "if env exists " name " ; then "              \
             " if test ${" name "} = ov5640 ; then "     \
 			GET_OVERLAY_APPLY("rzboard-ov5640.dtbo")  \
-            " elif test ${" name "} = as0260 ; then "   \
-            GET_OVERLAY_APPLY("rzboard-as0260.dtbo")  \
+            " elif test ${" name "} = imx219 ; then "   \
+            GET_OVERLAY_APPLY("rzboard-imx219.dtbo")  \
             " else;"                                  \
             "       echo  no found displayer; "       \
             " fi; "                                   \
