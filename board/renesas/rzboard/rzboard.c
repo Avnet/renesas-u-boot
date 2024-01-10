@@ -207,7 +207,7 @@ int board_init(void)
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = CONFIG_SYS_TEXT_BASE + 0x50000;
 
-	//board_usb_init();
+	board_usb_init();
 	/* reset usbhub */
 	usbhub_reset();
 
